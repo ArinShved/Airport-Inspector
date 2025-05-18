@@ -9,11 +9,10 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql Charts)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql Charts)
 
-find_package(Qt6 REQUIRED COMPONENTS Sql)
-find_package(Qt6 REQUIRED COMPONENTS Charts)
+find_package(PostgreSQL REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -47,16 +46,8 @@ endif()
 
 target_link_libraries(Airport_inspector PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-target_link_libraries(Airport_inspector PRIVATE Qt6::Sql)
-target_link_libraries(Airport_inspector PRIVATE Qt6::Charts)
+target_link_libraries(Airport_inspector PRIVATE Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Charts PostgreSQL::PostgreSQL)
 
-target_link_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/PG_Libs)
-target_link_libraries(Airport_inspector PRIVATE Qt6::Widgets
-                                             libcrypto-3-x64
-                                             libiconv-2
-                                             libintl-9
-                                             libpq
-                                             libssl-3-x64)
 
 
 set_target_properties(Airport_inspector PROPERTIES
