@@ -1,0 +1,155 @@
+#include "statistics.h"
+#include "qboxlayout.h"
+#include "ui_form.h"
+
+Statistics::Statistics(const QString &_airportCode, const QString &_date, QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::Statistics),
+    airportCode(_airportCode),
+    date(_date)
+{
+    ui->setupUi(this);
+    connect(ui->pb_close, &QPushButton::clicked, [this]() {
+        this->close();
+    });
+
+    tabSetup();
+
+    dataBase = new airportDataBase();
+    dataBase->ConnectToDataBase();
+    loadData();
+
+    ui->l_airportName->setText(dataBase->returnName(_airportCode));
+
+}
+
+Statistics::~Statistics()
+{
+    delete ui;
+    delete yearChartView;
+    delete monthChartView;
+}
+
+void Statistics::tabSetup()
+{
+    ui->pb_close->setText("Закрыть");
+
+    QStringList months = {"Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+                             "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"};
+    ui->cb_months->addItems(months);
+
+    yearChartView = new QChartView(ui->wid_yearlyStatistic);
+    monthChartView = new QChartView(ui->wid_monthlyStatistic);
+
+    QVBoxLayout *yearLayout = new QVBoxLayout(ui->wid_yearlyStatistic);
+    QVBoxLayout *monthLayout = new QVBoxLayout(ui->wid_monthlyStatistic);
+
+    yearLayout->addWidget(yearChartView);
+    monthLayout->addWidget(monthChartView);
+
+    yearChartView->setRenderHint(QPainter::Antialiasing);
+    monthChartView->setRenderHint(QPainter::Antialiasing);
+
+}
+
+
+void Statistics::loadData()
+{
+    QList<QPair<QString, int>> yearlyData = dataBase->fetchYearlyStatistics(airportCode);
+    QList<QPair<QString, int>> monthlyData = dataBase->fetchMonthlyStatistics(airportCode, (date.mid(date.length() - 4, date.length()-1)+ ".01.01"));
+
+    createYearChart(yearlyData);
+    createMonthChart(monthlyData);
+    connect(ui->cb_months, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Statistics::updateMonthChart);
+}
+
+
+void Statistics::updateMonthChart(int i)
+{
+    QString selectedMonth = ui->cb_months->itemText(i);
+
+    QString monthDate = date.mid(date.length() - 4, date.length()-1) + "." + QString::number(i + 1) + ".01";
+    QList<QPair<QString, int>> monthlyData = dataBase->fetchMonthlyStatistics(airportCode, monthDate);
+    createMonthChart(monthlyData);
+}
+
+void Statistics::createYearChart(const QList<QPair<QString, int>> &data)
+{
+    QChart *yearlyChart = new QChart();
+    yearlyChart->setTitle("Загруженность аэропорта за год");
+
+    QBarSeries *series = new QBarSeries();
+    QBarSet *set = new QBarSet("Количество рейсов");
+
+    QStringList type;
+
+    for (const auto &i : data)
+    {
+        type << i.first.mid(5,2);
+        *set << i.second;
+        series->append(set);
+    }
+
+
+    QStringList months = {"Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+                             "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"};
+
+    QStringList categories;
+
+    for (const auto &i : type)
+    {
+        categories << months[i.toInt()-1];
+    }
+
+    yearlyChart->addSeries(series);
+    yearlyChart->setAnimationOptions(QChart::SeriesAnimations);
+
+    QBarCategoryAxis *axisX = new QBarCategoryAxis();
+    axisX->append(categories);
+    yearlyChart->addAxis(axisX, Qt::AlignBottom);
+    series->attachAxis(axisX);
+
+    QValueAxis *axisY = new QValueAxis();
+    yearlyChart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
+    yearChartView->setChart(yearlyChart);
+}
+
+void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
+{
+    QChart *monthChart = new QChart();
+    monthChart->setTitle("Загруженность аэропорта за месяц");
+
+    QLineSeries *series = new QLineSeries();
+    series->setName("Количество рейсов");
+
+    QStringList type;
+
+
+    for (const auto &i: data) {
+        QDateTime dateTime = QDateTime::fromString(i.first, Qt::ISODate);
+        if (dateTime.isValid()) {
+            int day = dateTime.date().day();
+            series->append(day, i.second);
+        }
+    }
+
+    monthChart->addSeries(series);
+    monthChart->setAnimationOptions(QChart::SeriesAnimations);
+
+    QValueAxis *axisX = new QValueAxis();
+    axisX->setRange(1, 31);
+    axisX->setTitleText("День месяца");
+    axisX->setLabelFormat("%d");
+    monthChart->addAxis(axisX, Qt::AlignBottom);
+    series->attachAxis(axisX);
+
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setTitleText("Количество рейсов");
+    monthChart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
+    monthChartView->setChart(monthChart);
+}
+
