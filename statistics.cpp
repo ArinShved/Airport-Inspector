@@ -125,13 +125,14 @@ void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
     series->setName("Количество рейсов");
 
     QStringList type;
-
+    int max = 0;
 
     for (const auto &i: data) {
         QDateTime dateTime = QDateTime::fromString(i.first, Qt::ISODate);
         if (dateTime.isValid()) {
             int day = dateTime.date().day();
             series->append(day, i.second);
+            max = qMax(max, i.second);
         }
     }
 
@@ -142,11 +143,13 @@ void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
     axisX->setRange(1, 31);
     axisX->setTitleText("День месяца");
     axisX->setLabelFormat("%d");
+    axisX->setTickCount(11);
     monthChart->addAxis(axisX, Qt::AlignBottom);
     series->attachAxis(axisX);
 
     QValueAxis *axisY = new QValueAxis();
     axisY->setTitleText("Количество рейсов");
+    axisY->setRange(0, max * 1.1);
     monthChart->addAxis(axisY, Qt::AlignLeft);
     series->attachAxis(axisY);
 
