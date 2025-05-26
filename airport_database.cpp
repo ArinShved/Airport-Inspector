@@ -154,13 +154,15 @@ QList<QPair<QString, int>> airportDataBase::fetchMonthlyStatistics(const QString
     QSqlQuery query;
     query.prepare(" SELECT count(flight_no), date_trunc('day', scheduled_departure) as \"Day\" "
                   " FROM bookings.flights f "
-                  " WHERE (scheduled_departure::date > date('2016-08-31') AND scheduled_departure::date <= date('2017-08-31')) "
+                  " WHERE (scheduled_departure::date >= date('2016-08-31') AND scheduled_departure::date <= date('2017-08-31')) "
                   " AND (departure_airport = :airportCode OR arrival_airport = :airportCode) "
                   " AND date_trunc('month', scheduled_departure) = date_trunc('month', :month::date) "
                   " GROUP BY \"Day\"");
 
     query.bindValue(":airportCode", airportCode);
     query.bindValue(":month", month);
+
+
 
     if (!query.exec())
     {
@@ -172,6 +174,7 @@ QList<QPair<QString, int>> airportDataBase::fetchMonthlyStatistics(const QString
     {
         QString day = query.value(1).toString();
         int count = query.value(0).toInt();
+
         monthlyData.append(QPair<QString, int>(day, count));
     }
 

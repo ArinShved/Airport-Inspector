@@ -2,11 +2,10 @@
 #include "qboxlayout.h"
 #include "ui_form.h"
 
-Statistics::Statistics(const QString &_airportCode, const QString &_date, QWidget *parent) :
+Statistics::Statistics(const QString &_airportCode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Statistics),
-    airportCode(_airportCode),
-    date(_date)
+    airportCode(_airportCode)
 {
     ui->setupUi(this);
     connect(ui->pb_close, &QPushButton::clicked, [this]() {
@@ -25,9 +24,13 @@ Statistics::Statistics(const QString &_airportCode, const QString &_date, QWidge
 
 Statistics::~Statistics()
 {
-    delete ui;
+
+
     delete yearChartView;
     delete monthChartView;
+
+    delete dataBase;
+    delete ui;
 }
 
 void Statistics::tabSetup()
@@ -56,7 +59,7 @@ void Statistics::tabSetup()
 void Statistics::loadData()
 {
     QList<QPair<QString, int>> yearlyData = dataBase->fetchYearlyStatistics(airportCode);
-    QList<QPair<QString, int>> monthlyData = dataBase->fetchMonthlyStatistics(airportCode, (date.mid(date.length() - 4, date.length()-1)+ ".01.01"));
+    QList<QPair<QString, int>> monthlyData = dataBase->fetchMonthlyStatistics(airportCode, "2017.01.01");
 
     createYearChart(yearlyData);
     createMonthChart(monthlyData);
@@ -67,15 +70,29 @@ void Statistics::loadData()
 void Statistics::updateMonthChart(int i)
 {
     QString selectedMonth = ui->cb_months->itemText(i);
+    QString monthDate;
 
-    QString monthDate = date.mid(date.length() - 4, date.length()-1) + "." + QString::number(i + 1) + ".01";
+    if(i <8)
+    {
+       monthDate = "2017." + QString::number(i + 1) + ".01";
+    }
+    else
+    {
+       monthDate = "2016." + QString::number(i + 1) + ".01";
+    }
+
     QList<QPair<QString, int>> monthlyData = dataBase->fetchMonthlyStatistics(airportCode, monthDate);
     createMonthChart(monthlyData);
 }
 
+
 void Statistics::createYearChart(const QList<QPair<QString, int>> &data)
 {
+    QChart *oldChart = yearChartView->chart();
+
+
     QChart *yearlyChart = new QChart();
+
     yearlyChart->setTitle("Загруженность аэропорта за год");
 
     QBarSeries *series = new QBarSeries();
@@ -87,8 +104,9 @@ void Statistics::createYearChart(const QList<QPair<QString, int>> &data)
     {
         type << i.first.mid(5,2);
         *set << i.second;
-        series->append(set);
+
     }
+    series->append(set);
 
 
     QStringList months = {"Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
@@ -113,12 +131,24 @@ void Statistics::createYearChart(const QList<QPair<QString, int>> &data)
     yearlyChart->addAxis(axisY, Qt::AlignLeft);
     series->attachAxis(axisY);
 
+
+
     yearChartView->setChart(yearlyChart);
+
+    if (oldChart) {
+        delete oldChart;
+    }
+
+
 }
 
 void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
 {
+    QChart *oldChart = monthChartView->chart();
+
     QChart *monthChart = new QChart();
+
+
     monthChart->setTitle("Загруженность аэропорта за месяц");
 
     QLineSeries *series = new QLineSeries();
@@ -129,6 +159,7 @@ void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
 
     for (const auto &i: data) {
         QDateTime dateTime = QDateTime::fromString(i.first, Qt::ISODate);
+
         if (dateTime.isValid()) {
             int day = dateTime.date().day();
             series->append(day, i.second);
@@ -153,6 +184,13 @@ void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
     monthChart->addAxis(axisY, Qt::AlignLeft);
     series->attachAxis(axisY);
 
+
     monthChartView->setChart(monthChart);
+
+    if (oldChart) {
+        delete oldChart;
+    }
+
+
 }
 

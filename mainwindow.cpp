@@ -18,8 +18,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+
     delete dataBase;
+    delete ui;
 }
 
 void MainWindow::setupUI_1()
@@ -106,6 +107,7 @@ void MainWindow::showFlights()
     {
         ui->tw_main->insertRow(row);
         ui->tw_main->setItem(row, 0, new QTableWidgetItem(flight["flight_no"]));
+
         QString type = flightType ? flight["scheduled_arrival"] : flight["scheduled_departure"];
         ui->tw_main->setItem(row, 1, new QTableWidgetItem(type.mid(11, 5)));
         ui->tw_main->setItem(row, 2, new QTableWidgetItem(flight["airport_name"]));
@@ -122,9 +124,10 @@ void MainWindow::on_pb_flyList_clicked()
 void MainWindow::on_pb_showStatistics_clicked()
 {
     QString airportCode = ui->cb_airports->currentData().toString();
-    QString date = ui->de_flightDate->date().toString();
-    Statistics *newWindow = new Statistics(airportCode, date, this);
-    newWindow->setModal(true);
-    newWindow->exec();
+
+    Statistics newWindow(airportCode, this);
+
+    newWindow.setModal(true);
+    newWindow.exec();
 }
 

@@ -22,7 +22,7 @@ class Statistics : public QDialog
     Q_OBJECT
 
 public:
-    explicit Statistics(const QString &_airportCode, const QString &_date, QWidget *parent = nullptr);
+    explicit Statistics(const QString &_airportCode, QWidget *parent = nullptr);
     ~Statistics();
     void updateMonthChart(int i);
 
@@ -33,14 +33,19 @@ private:
     void createMonthChart(const QList<QPair<QString, int>> &data);
     void createYearChart(const QList<QPair<QString, int>> &data);
 
+
+
     Ui::Statistics *ui;
 
     const QString airportCode;
-    const QString date;
+
     airportDataBase* dataBase;
 
     QChartView* yearChartView;
     QChartView* monthChartView;
+
+
+
 };
 
 #endif // STATISTICS_H
