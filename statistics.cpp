@@ -14,7 +14,7 @@ Statistics::Statistics(const QString &_airportCode, QWidget *parent) :
 
     tabSetup();
 
-    dataBase = new airportDataBase();
+    dataBase = new airportDataBase(this);
     dataBase->ConnectToDataBase();
     loadData();
 
