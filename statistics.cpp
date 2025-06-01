@@ -95,8 +95,8 @@ void Statistics::createYearChart(const QList<QPair<QString, int>> &data)
 
     yearlyChart->setTitle("Загруженность аэропорта за год");
 
-    QBarSeries *series = new QBarSeries();
-    QBarSet *set = new QBarSet("Количество рейсов");
+    QBarSeries *series = new QBarSeries(yearlyChart);
+    QBarSet *set = new QBarSet("Количество рейсов", series);
 
     QStringList type;
 
@@ -122,12 +122,12 @@ void Statistics::createYearChart(const QList<QPair<QString, int>> &data)
     yearlyChart->addSeries(series);
     yearlyChart->setAnimationOptions(QChart::SeriesAnimations);
 
-    QBarCategoryAxis *axisX = new QBarCategoryAxis();
+    QBarCategoryAxis *axisX = new QBarCategoryAxis(yearlyChart);
     axisX->append(categories);
     yearlyChart->addAxis(axisX, Qt::AlignBottom);
     series->attachAxis(axisX);
 
-    QValueAxis *axisY = new QValueAxis();
+    QValueAxis *axisY = new QValueAxis(yearlyChart);
     yearlyChart->addAxis(axisY, Qt::AlignLeft);
     series->attachAxis(axisY);
 
@@ -135,8 +135,9 @@ void Statistics::createYearChart(const QList<QPair<QString, int>> &data)
 
     yearChartView->setChart(yearlyChart);
 
-    if (oldChart) {
-        delete oldChart;
+    if(oldChart)
+    {
+        deleteChart(oldChart);
     }
 
 
@@ -151,7 +152,7 @@ void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
 
     monthChart->setTitle("Загруженность аэропорта за месяц");
 
-    QLineSeries *series = new QLineSeries();
+    QLineSeries *series = new QLineSeries(monthChart);
     series->setName("Количество рейсов");
 
     QStringList type;
@@ -170,7 +171,7 @@ void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
     monthChart->addSeries(series);
     monthChart->setAnimationOptions(QChart::SeriesAnimations);
 
-    QValueAxis *axisX = new QValueAxis();
+    QValueAxis *axisX = new QValueAxis(monthChart);
     axisX->setRange(1, 31);
     axisX->setTitleText("День месяца");
     axisX->setLabelFormat("%d");
@@ -178,7 +179,7 @@ void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
     monthChart->addAxis(axisX, Qt::AlignBottom);
     series->attachAxis(axisX);
 
-    QValueAxis *axisY = new QValueAxis();
+    QValueAxis *axisY = new QValueAxis(monthChart);
     axisY->setTitleText("Количество рейсов");
     axisY->setRange(0, max * 1.1);
     monthChart->addAxis(axisY, Qt::AlignLeft);
@@ -187,10 +188,26 @@ void Statistics::createMonthChart(const QList<QPair<QString, int>> &data)
 
     monthChartView->setChart(monthChart);
 
-    if (oldChart) {
-        delete oldChart;
+    if(oldChart)
+    {
+        deleteChart(oldChart);
     }
-
 
 }
 
+void Statistics::deleteChart(QChart* chart) {
+    if (!chart) return;
+
+    for (auto* series : chart->series())
+    {
+        chart->removeSeries(series);
+        delete series;
+    }
+
+    for (auto* axis : chart->axes()) {
+        chart->removeAxis(axis);
+        delete axis;
+    }
+
+    delete chart;
+}

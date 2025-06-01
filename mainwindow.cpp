@@ -124,10 +124,11 @@ void MainWindow::on_pb_flyList_clicked()
 void MainWindow::on_pb_showStatistics_clicked()
 {
     QString airportCode = ui->cb_airports->currentData().toString();
+    Statistics *newWindow = new Statistics(airportCode, this);
+    newWindow->setAttribute(Qt::WA_DeleteOnClose);
 
-    Statistics newWindow(airportCode, this);
 
-    newWindow.setModal(true);
-    newWindow.exec();
+    newWindow->setModal(true);
+    newWindow->exec();
 }
 

@@ -4,9 +4,11 @@ airportDataBase::airportDataBase(QObject *parent)
     : QObject{parent}
 { 
     dataBase = new QSqlDatabase();
+    simpleQuery = new QSqlQuery();
 }
 
 airportDataBase::~airportDataBase(){
+    delete simpleQuery;
     delete dataBase;
 }
 
@@ -35,6 +37,9 @@ void airportDataBase::ConnectToDataBase()
 void airportDataBase::RequestToDB(QString request)
 {
     this->request = request;
+    if (simpleQuery) {
+        simpleQuery->clear();
+    }
     *simpleQuery = QSqlQuery(*dataBase);
     simpleQuery->exec(request);
 

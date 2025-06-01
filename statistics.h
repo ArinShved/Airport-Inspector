@@ -32,7 +32,7 @@ private:
     void loadData();
     void createMonthChart(const QList<QPair<QString, int>> &data);
     void createYearChart(const QList<QPair<QString, int>> &data);
-
+    void deleteChart(QChart* chart);
 
 
     Ui::Statistics *ui;
